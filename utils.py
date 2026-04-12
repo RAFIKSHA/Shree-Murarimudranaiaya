@@ -117,6 +117,11 @@ def generate_job_pdf(job: dict, details: dict) -> bytes:
                                   alignment=TA_CENTER, spaceAfter=2)
     sub_style   = ParagraphStyle("sub", parent=styles["Normal"],
                                   fontSize=9, alignment=TA_CENTER, spaceAfter=6)
+
+    # ✅ NEW (address style only added)
+    address_style = ParagraphStyle("addr", parent=styles["Normal"],
+                                  fontSize=8, alignment=TA_CENTER, spaceAfter=6)
+
     section_style = ParagraphStyle("sec", parent=styles["Normal"],
                                     fontSize=9, fontName="Helvetica-Bold",
                                     textColor=colors.white)
@@ -174,7 +179,14 @@ def generate_job_pdf(job: dict, details: dict) -> bytes:
 
     story = []
 
-    story.append(Paragraph("Shree Murari mudranaiaya Job Sheet", title_style))
+    story.append(Paragraph("🖨 Shree Murari Mudranalaya", title_style))
+
+    story.append(Paragraph(
+    "1328/13 Plot No. 2, Opp M.S.E.B Meter Testing Office,<br/>"
+    "Y.P. Power Nagar, Kolhapur – 416008<br/>"
+    "✉ abhipadwale@gmail.com",
+    sub_style))
+
     story.append(Paragraph(f"Job ID: {job.get('job_id','')}  |  Status: {job.get('status','')}", sub_style))
     story.append(HRFlowable(width=W, thickness=1, color=colors.HexColor("#2c3e50")))
     story.append(Spacer(1, 3*mm))
@@ -328,7 +340,7 @@ def generate_job_pdf(job: dict, details: dict) -> bytes:
                                    alignment=TA_CENTER)
     story.append(Paragraph(
         f"Generated on {datetime.now().strftime('%d-%m-%Y %H:%M')}  |  "
-        f"Job ID: {job.get('job_id','')}  |  Shree Murari mudranaiaya Management System",
+        f"Job ID: {job.get('job_id','')}  |  Shree Murari mudranalaya",
         footer_style))
 
     doc.build(story)
