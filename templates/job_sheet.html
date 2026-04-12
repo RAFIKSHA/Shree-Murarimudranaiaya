@@ -4,25 +4,266 @@
 
 {% block extra_css %}
 <style>
-  .sheet-section { border:1px solid #e0e0e0; border-radius:8px; margin-bottom:14px; overflow:hidden; }
-  .sheet-section .sec-head {
-    background:#2c3e50; color:#fff; padding:8px 14px;
-    font-size:.82rem; font-weight:600; letter-spacing:.5px;
+  /* ── Variables ── */
+  :root {
+    --ink:       #1a1a1a;
+    --ink-2:     #444;
+    --ink-3:     #888;
+    --ink-4:     #bbb;
+    --surface:   #ffffff;
+    --surface-2: #f7f7f6;
+    --surface-3: #f0efed;
+    --border:    #e4e2de;
+    --border-2:  #d0ceca;
+    --accent:    #2563eb;
+    --accent-bg: #eff6ff;
+    --green:     #16a34a;
+    --green-bg:  #f0fdf4;
+    --red:       #dc2626;
+    --red-bg:    #fef2f2;
+    --amber:     #d97706;
+    --amber-bg:  #fffbeb;
+    --radius:    10px;
+    --radius-sm: 6px;
+    --shadow:    0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
   }
-  .sheet-section .sec-body { padding:12px 14px; }
-  .kv-row { display:flex; flex-wrap:wrap; gap:0; }
-  .kv-item { flex:1 1 220px; padding:5px 8px; border-right:1px solid #f0f0f0; border-bottom:1px solid #f0f0f0; }
-  .kv-item .kv-label { font-size:.72rem; color:#888; font-weight:600; text-transform:uppercase; }
-  .kv-item .kv-val { font-size:.88rem; color:#222; font-weight:500; }
-  .cost-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f0f0f0; }
-  .cost-row:last-child { border-bottom:none; }
-  .grand-total { background:#27ae60; color:#fff; border-radius:8px; padding:12px 16px; text-align:center; }
-  .grand-total .amt { font-size:1.8rem; font-weight:700; }
+
+  /* ── Layout ── */
+  .js-wrap {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 840px) {
+    .js-wrap { grid-template-columns: 1fr; }
+    .js-right { order: -1; }
+  }
+
+  /* ── Action Bar ── */
+  .js-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .js-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink-2);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .js-actions .btn:hover { background: var(--surface-2); border-color: var(--border-2); }
+  .btn-primary  { background: var(--accent)    !important; color: #fff !important; border-color: var(--accent)    !important; }
+  .btn-primary:hover  { background: #1d4ed8 !important; }
+  .btn-danger   { background: var(--red)        !important; color: #fff !important; border-color: var(--red)        !important; }
+  .btn-danger:hover   { background: #b91c1c !important; }
+  .btn-ghost    { background: transparent !important; }
+
+  .js-status-form { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+  .js-status-form select {
+    padding: 6px 10px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  /* ── Header Card ── */
+  .js-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .js-header-inner { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+  .js-shop-name  { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .js-shop-addr  { font-size: 12px; color: var(--ink-3); line-height: 1.7; margin-bottom: 12px; }
+  .js-meta       { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--ink-3); }
+  .js-meta strong { color: var(--ink); font-weight: 600; }
+  .js-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: .3px;
+  }
+  .badge-pending    { background: var(--surface-3); color: var(--ink-3); }
+  .badge-inprogress { background: var(--amber-bg);  color: var(--amber); }
+  .badge-completed  { background: var(--green-bg);  color: var(--green); }
+  .badge-delivered  { background: var(--accent-bg); color: var(--accent); }
+  .js-qr { margin-top: 8px; }
+  .js-qr img { display: block; }
+
+  /* ── Sections ── */
+  .js-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .js-sec-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+  }
+  .js-sec-head .icon { font-size: 14px; }
+  .js-sec-body { padding: 0; }
+
+  /* ── KV Grid ── */
+  .kv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .kv-item {
+    padding: 10px 14px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    min-width: 0;
+  }
+  .kv-item:last-child  { border-right: none; }
+  .kv-item.kv-full     { grid-column: 1 / -1; border-right: none; }
+  .kv-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--ink-4);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 3px;
+  }
+  .kv-val {
+    font-size: 13.5px;
+    color: var(--ink);
+    font-weight: 500;
+    word-break: break-word;
+  }
+  .kv-val.empty { color: var(--ink-4); font-weight: 400; }
+
+  /* ── Right Column ── */
+  .js-right { display: flex; flex-direction: column; gap: 14px; }
+
+  /* Image Card */
+  .js-img-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .js-card-head {
+    padding: 9px 14px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+  }
+  .js-img-wrap { padding: 12px; text-align: center; }
+  .js-img-wrap img {
+    max-height: 220px;
+    width: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .js-img-wrap img:hover { opacity: .88; }
+  .js-img-hint { font-size: 11px; color: var(--ink-4); margin-top: 6px; }
+
+  /* Cost Card */
+  .js-cost-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .js-cost-body { padding: 4px 16px 14px; }
+  .cost-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .cost-row:last-of-type { border-bottom: none; }
+  .cost-label { color: var(--ink-3); }
+  .cost-amt   { font-weight: 600; color: var(--ink); }
+  .cost-divider { height: 1px; background: var(--border); margin: 2px 0 12px; }
+
+  .grand-total {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .grand-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,.75);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 4px;
+  }
+  .grand-amt {
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+
+  /* Delete */
+  .btn-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--red);
+    background: transparent;
+    color: var(--red);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background .15s;
+    margin-top: 4px;
+  }
+  .btn-delete:hover { background: var(--red-bg); }
+
+  /* Print */
   @media print {
-    #sidebar, .topbar, .no-print { display:none !important; }
-    #main { margin-left:0 !important; }
-    .content { padding:0 !important; }
-    body { background:#fff !important; }
+    #sidebar, .topbar, .js-actions, .btn-delete, .no-print { display: none !important; }
+    #main { margin-left: 0 !important; }
+    .content { padding: 0 !important; }
+    body { background: #fff !important; }
+    .js-wrap { grid-template-columns: 1fr 260px; }
   }
 </style>
 {% endblock %}
@@ -30,255 +271,247 @@
 {% block content %}
 {% set d = details or {} %}
 
-<!-- Action Bar -->
-<div class="d-flex gap-2 mb-3 no-print flex-wrap">
+<!-- ── Action Bar ── -->
+<div class="js-actions no-print">
   <a href="{{ url_for('job_edit', job_pk=job.id) }}" class="btn btn-primary">
-    <i class="fas fa-edit me-1"></i>Edit Job
+    <i class="fas fa-edit"></i> Edit Job
   </a>
   <a href="{{ url_for('job_pdf', job_pk=job.id) }}" class="btn btn-danger">
-    <i class="fas fa-file-pdf me-1"></i>Download PDF
+    <i class="fas fa-file-pdf"></i> Download PDF
   </a>
-  <button onclick="window.print()" class="btn btn-outline-secondary">
-    <i class="fas fa-print me-1"></i>Print
+  <button onclick="window.print()" class="btn btn-ghost">
+    <i class="fas fa-print"></i> Print
   </button>
-  <form method="POST" action="{{ url_for('job_duplicate', job_pk=job.id) }}">
-    <button class="btn btn-outline-info"><i class="fas fa-copy me-1"></i>Duplicate</button>
+  <form method="POST" action="{{ url_for('job_duplicate', job_pk=job.id) }}" style="display:inline">
+    <button class="btn btn-ghost"><i class="fas fa-copy"></i> Duplicate</button>
   </form>
-  <a href="{{ url_for('jobs') }}" class="btn btn-outline-secondary">
-    <i class="fas fa-arrow-left me-1"></i>Back
+  <a href="{{ url_for('jobs') }}" class="btn btn-ghost">
+    <i class="fas fa-arrow-left"></i> Back
   </a>
 
-  <!-- Quick Status Change -->
-  <form method="POST" action="{{ url_for('job_status_update', job_pk=job.id) }}" class="d-flex gap-1 ms-auto">
-    <select name="status" class="form-select form-select-sm" style="width:160px">
+  <form method="POST" action="{{ url_for('job_status_update', job_pk=job.id) }}" class="js-status-form">
+    <select name="status">
       {% for s in ['Pending','In Progress','Completed','Delivered'] %}
       <option value="{{ s }}" {{ 'selected' if job.status == s }}>{{ s }}</option>
       {% endfor %}
     </select>
-    <button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
+    <button class="btn btn-primary" style="padding:7px 12px"><i class="fas fa-check"></i></button>
   </form>
 </div>
 
-<!-- Sheet -->
-<div class="row">
-  <div class="col-lg-8">
+<!-- ── Two-Column Layout ── -->
+<div class="js-wrap">
+
+  <!-- ── LEFT COLUMN ── -->
+  <div>
 
     <!-- Header -->
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-          <div>
-            <h4 class="fw-bold mb-1">🖨️ Shree Murari mudranalaya</h4>
-            <h4 class="fw-bold mb-1">🖨️ Shree Murari mudranalaya</h4>
-            <p style="font-size:13px; color:#555; margin-bottom:6px; line-height:1.5;">
-              1328/13 Plot No. 2, Opp M.S.E.B meter testing office, Y.P. Power Nagar, Kolhapur-416008<br>
-              📧 abhipadwale@gmail.com</p>
-
-<div class="d-flex gap-3 flex-wrap">
-            <div class="d-flex gap-3 flex-wrap">
-              <span><strong>Job ID:</strong> {{ job.job_id }}</span>
-              <span><strong>Invoice:</strong> {{ job.invoice_number or '—' }}</span>
-              <span><strong>Made By:</strong> {{ job.made_by or '—' }}</span>
-            </div>
+    <div class="js-header">
+      <div class="js-header-inner">
+        <div>
+          <div class="js-shop-name">🖨 Shree Murari Mudranalaya</div>
+          <div class="js-shop-addr">
+            1328/13 Plot No. 2, Opp M.S.E.B Meter Testing Office,<br>
+            Y.P. Power Nagar, Kolhapur – 416008<br>
+            ✉ abhipadwale@gmail.com
           </div>
-          <div class="text-end">
-            <span class="badge-status {{ status_badge_class(job.status) }} fs-6 px-3 py-2">
-              {{ job.status }}
-            </span>
-            {% if qr_b64 %}
-            <div class="mt-2">
-              <img src="data:image/png;base64,{{ qr_b64 }}" width="80" alt="QR"/>
-            </div>
-            {% endif %}
+          <div class="js-meta">
+            <span><strong>Job ID:</strong> {{ job.job_id }}</span>
+            <span><strong>Invoice:</strong> {{ job.invoice_number or '—' }}</span>
+            <span><strong>Made By:</strong> {{ job.made_by or '—' }}</span>
           </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+          <span class="js-badge {{ status_badge_class(job.status) }}">{{ job.status }}</span>
+          {% if qr_b64 %}
+          <div class="js-qr">
+            <img src="data:image/png;base64,{{ qr_b64 }}" width="72" alt="QR Code"/>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
 
-    <!-- Customer & Dates -->
-    <div class="sheet-section">
-      <div class="sec-head">📋 Job Information</div>
-      <div class="sec-body">
-        <div class="kv-row">
-          {% set cust = job.customers or {} %}
-          <div class="kv-item"><div class="kv-label">Job Name</div><div class="kv-val">{{ job.job_name or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Customer</div><div class="kv-val">{{ cust.get('name','—') }}</div></div>
-          <div class="kv-item"><div class="kv-label">Mobile</div><div class="kv-val">{{ cust.get('mobile','—') }}</div></div>
+    <!-- Job Information -->
+    <div class="js-section">
+      <div class="js-sec-head"><span class="icon">📋</span> Job Information</div>
+      <div class="js-sec-body">
+        {% set cust = job.customers or {} %}
+        <div class="kv-grid">
+          <div class="kv-item"><div class="kv-label">Job Name</div><div class="kv-val {{ '' if job.job_name else 'empty' }}">{{ job.job_name or '—' }}</div></div>
+          <div class="kv-item"><div class="kv-label">Customer</div><div class="kv-val {{ '' if cust.get('name') else 'empty' }}">{{ cust.get('name','—') }}</div></div>
+          <div class="kv-item"><div class="kv-label">Mobile</div><div class="kv-val {{ '' if cust.get('mobile') else 'empty' }}">{{ cust.get('mobile','—') }}</div></div>
           <div class="kv-item"><div class="kv-label">Copies</div><div class="kv-val">{{ job.copies }}</div></div>
-          <div class="kv-item"><div class="kv-label">Receiving Date</div><div class="kv-val">{{ job.receiving_date or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Delivery Date</div><div class="kv-val">{{ job.delivery_date or '—' }}</div></div>
-          <div class="kv-item" style="flex-basis:100%"><div class="kv-label">Address</div><div class="kv-val">{{ cust.get('address','—') }}</div></div>
+          <div class="kv-item"><div class="kv-label">Receiving Date</div><div class="kv-val {{ '' if job.receiving_date else 'empty' }}">{{ job.receiving_date or '—' }}</div></div>
+          <div class="kv-item"><div class="kv-label">Delivery Date</div><div class="kv-val {{ '' if job.delivery_date else 'empty' }}">{{ job.delivery_date or '—' }}</div></div>
+          <div class="kv-item kv-full"><div class="kv-label">Address</div><div class="kv-val {{ '' if cust.get('address') else 'empty' }}">{{ cust.get('address','—') }}</div></div>
           {% if job.job_information %}
-          <div class="kv-item" style="flex-basis:100%"><div class="kv-label">Notes</div><div class="kv-val">{{ job.job_information }}</div></div>
+          <div class="kv-item kv-full"><div class="kv-label">Notes</div><div class="kv-val">{{ job.job_information }}</div></div>
           {% endif %}
         </div>
       </div>
     </div>
 
     <!-- Printing -->
-    <div class="sheet-section">
-      <div class="sec-head">🖨️ Printing</div>
-      <div class="sec-body">
-        <div class="kv-row">
-          <div class="kv-item"><div class="kv-label">Machine</div><div class="kv-val">{{ d.get('machine') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Print Size</div><div class="kv-val">{{ d.get('size_printing') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Color</div><div class="kv-val">{{ d.get('color') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Color Details</div><div class="kv-val">{{ d.get('color_details') or '—' }}</div></div>
+    <div class="js-section">
+      <div class="js-sec-head"><span class="icon">🖨</span> Printing</div>
+      <div class="js-sec-body">
+        <div class="kv-grid">
+          {% for label, key in [('Machine','machine'),('Print Size','size_printing'),('Color','color'),('Color Details','color_details')] %}
+          <div class="kv-item"><div class="kv-label">{{ label }}</div><div class="kv-val {{ '' if d.get(key) else 'empty' }}">{{ d.get(key) or '—' }}</div></div>
+          {% endfor %}
           <div class="kv-item"><div class="kv-label">Backside Print</div><div class="kv-val">{{ 'Yes' if d.get('backside_printing') else 'No' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Back Color</div><div class="kv-val">{{ d.get('back_color') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Total Printing</div><div class="kv-val">{{ d.get('total_printing') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Total Sets</div><div class="kv-val">{{ d.get('total_sets') or '—' }}</div></div>
+          {% for label, key in [('Back Color','back_color'),('Total Printing','total_printing'),('Total Sets','total_sets')] %}
+          <div class="kv-item"><div class="kv-label">{{ label }}</div><div class="kv-val {{ '' if d.get(key) else 'empty' }}">{{ d.get(key) or '—' }}</div></div>
+          {% endfor %}
         </div>
       </div>
     </div>
 
     <!-- Plate -->
-    <div class="sheet-section">
-      <div class="sec-head">🔲 Plate</div>
-      <div class="sec-body">
-        <div class="kv-row">
-          <div class="kv-item"><div class="kv-label">Provider</div><div class="kv-val">{{ d.get('plate_provider') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Type</div><div class="kv-val">{{ d.get('plate_type') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Size</div><div class="kv-val">{{ d.get('plate_size') or '—' }}</div></div>
+    <div class="js-section">
+      <div class="js-sec-head"><span class="icon">🔲</span> Plate</div>
+      <div class="js-sec-body">
+        <div class="kv-grid">
+          {% for label, key in [('Provider','plate_provider'),('Type','plate_type'),('Size','plate_size')] %}
+          <div class="kv-item"><div class="kv-label">{{ label }}</div><div class="kv-val {{ '' if d.get(key) else 'empty' }}">{{ d.get(key) or '—' }}</div></div>
+          {% endfor %}
         </div>
       </div>
     </div>
 
     <!-- Design -->
-    <div class="sheet-section">
-      <div class="sec-head">✏️ Design</div>
-      <div class="sec-body">
-        <div class="kv-row">
-          <div class="kv-item"><div class="kv-label">Size</div><div class="kv-val">{{ d.get('design_size') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Pages</div><div class="kv-val">{{ d.get('design_pages') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Details</div><div class="kv-val">{{ d.get('design_details') or '—' }}</div></div>
+    <div class="js-section">
+      <div class="js-sec-head"><span class="icon">✏️</span> Design</div>
+      <div class="js-sec-body">
+        <div class="kv-grid">
+          {% for label, key in [('Size','design_size'),('Pages','design_pages'),('Details','design_details')] %}
+          <div class="kv-item"><div class="kv-label">{{ label }}</div><div class="kv-val {{ '' if d.get(key) else 'empty' }}">{{ d.get(key) or '—' }}</div></div>
+          {% endfor %}
         </div>
       </div>
     </div>
 
     <!-- Lamination -->
-    <div class="sheet-section">
-      <div class="sec-head">✨ Lamination</div>
-      <div class="sec-body">
-        <div class="kv-row">
-          <div class="kv-item"><div class="kv-label">Provider</div><div class="kv-val">{{ d.get('lam_provider') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Type</div><div class="kv-val">{{ d.get('lam_type') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Size</div><div class="kv-val">{{ d.get('lam_size') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Quantity</div><div class="kv-val">{{ d.get('lam_quantity') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Spot Qty</div><div class="kv-val">{{ d.get('lam_spot_quantity') or '—' }}</div></div>
+    <div class="js-section">
+      <div class="js-sec-head"><span class="icon">✨</span> Lamination</div>
+      <div class="js-sec-body">
+        <div class="kv-grid">
+          {% for label, key in [('Provider','lam_provider'),('Type','lam_type'),('Size','lam_size'),('Quantity','lam_quantity'),('Spot Qty','lam_spot_quantity')] %}
+          <div class="kv-item"><div class="kv-label">{{ label }}</div><div class="kv-val {{ '' if d.get(key) else 'empty' }}">{{ d.get(key) or '—' }}</div></div>
+          {% endfor %}
         </div>
       </div>
     </div>
 
-    <!-- Punching Creasing Folding -->
-    <div class="sheet-section">
-      <div class="sec-head">⚙️ Punching / Creasing / Folding</div>
-      <div class="sec-body">
-        <div class="kv-row">
-          <div class="kv-item"><div class="kv-label">Punch Provider</div><div class="kv-val">{{ d.get('punch_provider') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Punch Size</div><div class="kv-val">{{ d.get('punch_size') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Punch Qty</div><div class="kv-val">{{ d.get('punch_quantity') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Crease Provider</div><div class="kv-val">{{ d.get('crease_provider') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Crease Type</div><div class="kv-val">{{ d.get('crease_type') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Crease Size</div><div class="kv-val">{{ d.get('crease_size') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Crease Qty</div><div class="kv-val">{{ d.get('crease_quantity') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Fold Provider</div><div class="kv-val">{{ d.get('fold_provider') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Fold Size</div><div class="kv-val">{{ d.get('fold_size') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Fold Qty</div><div class="kv-val">{{ d.get('fold_quantity') or '—' }}</div></div>
+    <!-- Punching / Creasing / Folding -->
+    <div class="js-section">
+      <div class="js-sec-head"><span class="icon">⚙️</span> Punching / Creasing / Folding</div>
+      <div class="js-sec-body">
+        <div class="kv-grid">
+          {% for label, key in [
+            ('Punch Provider','punch_provider'),('Punch Size','punch_size'),('Punch Qty','punch_quantity'),
+            ('Crease Provider','crease_provider'),('Crease Type','crease_type'),('Crease Size','crease_size'),('Crease Qty','crease_quantity'),
+            ('Fold Provider','fold_provider'),('Fold Size','fold_size'),('Fold Qty','fold_quantity')
+          ] %}
+          <div class="kv-item"><div class="kv-label">{{ label }}</div><div class="kv-val {{ '' if d.get(key) else 'empty' }}">{{ d.get(key) or '—' }}</div></div>
+          {% endfor %}
         </div>
       </div>
     </div>
 
     <!-- Paper -->
-    <div class="sheet-section">
-      <div class="sec-head">📄 Paper</div>
-      <div class="sec-body">
-        <div class="kv-row">
-          <div class="kv-item"><div class="kv-label">Provider</div><div class="kv-val">{{ d.get('paper_provider') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Size</div><div class="kv-val">{{ d.get('paper_size') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Sheets</div><div class="kv-val">{{ d.get('paper_sheets') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Type</div><div class="kv-val">{{ d.get('paper_type') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">GSM</div><div class="kv-val">{{ d.get('paper_gsm') or '—' }}</div></div>
+    <div class="js-section">
+      <div class="js-sec-head"><span class="icon">📄</span> Paper</div>
+      <div class="js-sec-body">
+        <div class="kv-grid">
+          {% for label, key in [('Provider','paper_provider'),('Size','paper_size'),('Sheets','paper_sheets'),('Type','paper_type'),('GSM','paper_gsm')] %}
+          <div class="kv-item"><div class="kv-label">{{ label }}</div><div class="kv-val {{ '' if d.get(key) else 'empty' }}">{{ d.get(key) or '—' }}</div></div>
+          {% endfor %}
         </div>
       </div>
     </div>
 
-    <!-- Binding Envelope -->
-    <div class="sheet-section">
-      <div class="sec-head">📚 Binding / Envelope</div>
-      <div class="sec-body">
-        <div class="kv-row">
-          <div class="kv-item"><div class="kv-label">Bind Provider</div><div class="kv-val">{{ d.get('bind_provider') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Bind Type</div><div class="kv-val">{{ d.get('bind_type') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Bind Size</div><div class="kv-val">{{ d.get('bind_size') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Bind Pages</div><div class="kv-val">{{ d.get('bind_pages') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Bind Qty</div><div class="kv-val">{{ d.get('bind_quantity') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Env Provider</div><div class="kv-val">{{ d.get('env_provider') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Env Type</div><div class="kv-val">{{ d.get('env_type') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Env Size</div><div class="kv-val">{{ d.get('env_size') or '—' }}</div></div>
-          <div class="kv-item"><div class="kv-label">Env Qty</div><div class="kv-val">{{ d.get('env_quantity') or '—' }}</div></div>
+    <!-- Binding / Envelope -->
+    <div class="js-section">
+      <div class="js-sec-head"><span class="icon">📚</span> Binding / Envelope</div>
+      <div class="js-sec-body">
+        <div class="kv-grid">
+          {% for label, key in [
+            ('Bind Provider','bind_provider'),('Bind Type','bind_type'),('Bind Size','bind_size'),
+            ('Bind Pages','bind_pages'),('Bind Qty','bind_quantity'),
+            ('Env Provider','env_provider'),('Env Type','env_type'),('Env Size','env_size'),('Env Qty','env_quantity')
+          ] %}
+          <div class="kv-item"><div class="kv-label">{{ label }}</div><div class="kv-val {{ '' if d.get(key) else 'empty' }}">{{ d.get(key) or '—' }}</div></div>
+          {% endfor %}
         </div>
       </div>
     </div>
 
-    <!-- Cutting & Other -->
+    <!-- Cutting & Other (conditional) -->
     {% if d.get('cutting_instructions') or d.get('other_instructions') %}
-    <div class="sheet-section">
-      <div class="sec-head">✂️ Cutting & Other Instructions</div>
-      <div class="sec-body">
-        <div class="kv-row">
-          <div class="kv-item" style="flex-basis:50%"><div class="kv-label">Cutting</div><div class="kv-val">{{ d.get('cutting_instructions') or '—' }}</div></div>
-          <div class="kv-item" style="flex-basis:50%"><div class="kv-label">Other</div><div class="kv-val">{{ d.get('other_instructions') or '—' }}</div></div>
+    <div class="js-section">
+      <div class="js-sec-head"><span class="icon">✂️</span> Cutting &amp; Other Instructions</div>
+      <div class="js-sec-body">
+        <div class="kv-grid">
+          <div class="kv-item"><div class="kv-label">Cutting</div><div class="kv-val {{ '' if d.get('cutting_instructions') else 'empty' }}">{{ d.get('cutting_instructions') or '—' }}</div></div>
+          <div class="kv-item"><div class="kv-label">Other</div><div class="kv-val {{ '' if d.get('other_instructions') else 'empty' }}">{{ d.get('other_instructions') or '—' }}</div></div>
         </div>
       </div>
     </div>
     {% endif %}
 
-  </div><!-- /col-8 -->
+  </div><!-- /left -->
 
-  <!-- RIGHT: Cost + Image -->
-  <div class="col-lg-4">
+  <!-- ── RIGHT COLUMN ── -->
+  <div class="js-right">
 
     <!-- Job Image -->
     {% if job.job_image %}
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-header py-2 fw-semibold"><i class="fas fa-image me-2"></i>Job Image</div>
-      <div class="card-body text-center p-2">
+    <div class="js-img-card">
+      <div class="js-card-head"><i class="fas fa-image" style="margin-right:6px"></i>Job Image</div>
+      <div class="js-img-wrap">
         <img src="{{ job.job_image }}" alt="Job Image"
-             class="img-fluid rounded" style="max-height:250px; cursor:pointer"
              onclick="window.open('{{ job.job_image }}','_blank')"/>
-        <div class="text-muted small mt-1">Click to view full image</div>
+        <div class="js-img-hint">Click to view full image</div>
       </div>
     </div>
     {% endif %}
 
     <!-- Cost Breakdown -->
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-header py-2 fw-semibold"><i class="fas fa-rupee-sign me-2"></i>Cost Breakdown</div>
-      <div class="card-body">
-        {% for label, key in [('Paper Cost','paper_cost'),('Printing Cost','printing_cost'),
-                               ('Design Cost','design_cost'),('Binding Cost','binding_cost'),
-                               ('Other Charges','other_charges')] %}
+    <div class="js-cost-card">
+      <div class="js-card-head"><i class="fas fa-rupee-sign" style="margin-right:6px"></i>Cost Breakdown</div>
+      <div class="js-cost-body">
+        {% for label, key in [
+          ('Paper Cost','paper_cost'),
+          ('Printing Cost','printing_cost'),
+          ('Design Cost','design_cost'),
+          ('Binding Cost','binding_cost'),
+          ('Other Charges','other_charges')
+        ] %}
         <div class="cost-row">
-          <span class="text-muted small">{{ label }}</span>
-          <span class="fw-semibold">₹{{ "{:,.2f}".format(job.get(key) or 0) }}</span>
+          <span class="cost-label">{{ label }}</span>
+          <span class="cost-amt">₹{{ "{:,.2f}".format(job.get(key) or 0) }}</span>
         </div>
         {% endfor %}
-        <div class="grand-total mt-3">
-          <div class="small">GRAND TOTAL</div>
-          <div class="amt">₹{{ "{:,.2f}".format(job.total_cost or 0) }}</div>
+        <div class="cost-divider"></div>
+        <div class="grand-total">
+          <div class="grand-label">Grand Total</div>
+          <div class="grand-amt">₹{{ "{:,.2f}".format(job.total_cost or 0) }}</div>
         </div>
       </div>
     </div>
 
     <!-- Delete -->
     <form method="POST" action="{{ url_for('job_delete', job_pk=job.id) }}"
-          onsubmit="return confirm('Delete job {{ job.job_id }} permanently?')" class="no-print">
-      <button class="btn btn-outline-danger w-100">
-        <i class="fas fa-trash me-1"></i>Delete Job
+          onsubmit="return confirm('Permanently delete job {{ job.job_id }}?')"
+          class="no-print">
+      <button class="btn-delete">
+        <i class="fas fa-trash"></i> Delete Job
       </button>
     </form>
-  </div>
 
-</div>
+  </div><!-- /right -->
+
+</div><!-- /js-wrap -->
 {% endblock %}
