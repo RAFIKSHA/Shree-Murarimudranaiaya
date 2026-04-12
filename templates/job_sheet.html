@@ -279,9 +279,9 @@
   <a href="{{ url_for('job_pdf', job_pk=job.id) }}" class="btn btn-danger">
     <i class="fas fa-file-pdf"></i> Download PDF
   </a>
-  <button onclick="window.print()" class="btn btn-ghost">
+  <!-- <button onclick="window.print()" class="btn btn-ghost">
     <i class="fas fa-print"></i> Print
-  </button>
+  </button> -->
   <form method="POST" action="{{ url_for('job_duplicate', job_pk=job.id) }}" style="display:inline">
     <button class="btn btn-ghost"><i class="fas fa-copy"></i> Duplicate</button>
   </form>
