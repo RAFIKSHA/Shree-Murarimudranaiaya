@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Job' if is_edit else 'New Job' }}{% endblock %}
+{% block page_title %}{{ 'Edit Job: ' + job.job_id if is_edit else 'New Job' }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .section-card { border:none; border-radius:10px; box-shadow:0 1px 6px rgba(0,0,0,.08); margin-bottom:16px; }
+  .section-card .card-header {
+    background:#2c3e50; color:#fff; font-weight:600; font-size:.9rem;
+    border-radius:10px 10px 0 0 !important; padding:10px 16px;
+  }
+  .section-card .card-body { padding:16px; }
+  .form-label { font-size:.82rem; font-weight:600; color:#555; margin-bottom:3px; }
+  .form-control, .form-select { font-size:.88rem; }
+  .cost-input { border-left:3px solid #27ae60 !important; }
+  #total_display { font-size:1.4rem; font-weight:700; color:#27ae60; }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data" id="jobForm">
+
+  <div class="row g-3">
+    <!-- LEFT COLUMN -->
+    <div class="col-lg-8">
+
+      <!-- BASIC INFO -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-info-circle me-2"></i>Job Information</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label">Customer *</label>
+              <select name="customer_id" class="form-select" id="customerSelect" required>
+                <option value="">— Select Customer —</option>
+                {% for c in customers %}
+                <option value="{{ c.id }}" {{ 'selected' if job and job.customer_id == c.id }}>
+                  {{ c.name }} — {{ c.mobile }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Job Name</label>
+              <input type="text" name="job_name" class="form-control"
+                     value="{{ job.job_name if job else '' }}" placeholder="e.g. Wedding Card"/>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Copies</label>
+              <input type="number" name="copies" class="form-control" min="1"
+                     value="{{ job.copies if job else 1 }}"/>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Invoice No.</label>
+              <input type="text" name="invoice_number" class="form-control"
+                     value="{{ job.invoice_number if job else '' }}"/>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Made By</label>
+              <input type="text" name="made_by" class="form-control"
+                     value="{{ job.made_by if job else '' }}"/>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Status</label>
+              <select name="status" class="form-select">
+                {% for s in ['Pending','In Progress','Completed','Delivered'] %}
+                <option value="{{ s }}" {{ 'selected' if job and job.status == s }}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Receiving Date</label>
+              <input type="date" name="receiving_date" class="form-control"
+                     value="{{ job.receiving_date if job else '' }}"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Delivery Date</label>
+              <input type="date" name="delivery_date" class="form-control"
+                     value="{{ job.delivery_date if job else '' }}"/>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Job Information / Notes</label>
+              <textarea name="job_information" class="form-control" rows="2"
+                        placeholder="Any special notes…">{{ job.job_information if job else '' }}</textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Job Image</label>
+              {% if job and job.job_image %}
+              <div class="mb-2">
+                <img src="{{ job.job_image }}" alt="Job Image"
+                     style="max-height:120px;border-radius:8px;border:1px solid #ddd"/>
+                <div class="text-muted small mt-1">Current image — upload new to replace</div>
+              </div>
+              {% endif %}
+              <input type="file" name="job_image" class="form-control" accept="image/*"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRINTING -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-print me-2"></i>Printing</div>
+        <div class="card-body">
+          <div class="row g-2">
+            {% set d = details or {} %}
+            <div class="col-md-4">
+              <label class="form-label">Machine</label>
+              <input type="text" name="machine" class="form-control" value="{{ d.get('machine','') }}"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Print Size</label>
+              <input type="text" name="size_printing" class="form-control" value="{{ d.get('size_printing','') }}"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Color</label>
+              <input type="text" name="color" class="form-control" value="{{ d.get('color','') }}" placeholder="4+0 / 4+4"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Color Details</label>
+              <input type="text" name="color_details" class="form-control" value="{{ d.get('color_details','') }}"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Backside Printing?</label>
+              <select name="backside_printing" class="form-select">
+                <option value="no" {{ 'selected' if not d.get('backside_printing') }}>No</option>
+                <option value="yes" {{ 'selected' if d.get('backside_printing') }}>Yes</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Back Color</label>
+              <input type="text" name="back_color" class="form-control" value="{{ d.get('back_color','') }}"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Total Printing</label>
+              <input type="text" name="total_printing" class="form-control" value="{{ d.get('total_printing','') }}"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Total Sets</label>
+              <input type="text" name="total_sets" class="form-control" value="{{ d.get('total_sets','') }}"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLATE -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-layer-group me-2"></i>Plate</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-4">
+              <label class="form-label">Provider</label>
+              <input type="text" name="plate_provider" class="form-control" value="{{ d.get('plate_provider','') }}"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Type</label>
+              <input type="text" name="plate_type" class="form-control" value="{{ d.get('plate_type','') }}"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Size</label>
+              <input type="text" name="plate_size" class="form-control" value="{{ d.get('plate_size','') }}"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESIGN -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-pencil-ruler me-2"></i>Design</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-4">
+              <label class="form-label">Size</label>
+              <input type="text" name="design_size" class="form-control" value="{{ d.get('design_size','') }}"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Pages</label>
+              <input type="text" name="design_pages" class="form-control" value="{{ d.get('design_pages','') }}"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Details</label>
+              <input type="text" name="design_details" class="form-control" value="{{ d.get('design_details','') }}"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAMINATION -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-layer-group me-2"></i>Lamination</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-4"><label class="form-label">Provider</label>
+              <input type="text" name="lam_provider" class="form-control" value="{{ d.get('lam_provider','') }}"/></div>
+            <div class="col-md-4"><label class="form-label">Type</label>
+              <input type="text" name="lam_type" class="form-control" value="{{ d.get('lam_type','') }}"/></div>
+            <div class="col-md-4"><label class="form-label">Size</label>
+              <input type="text" name="lam_size" class="form-control" value="{{ d.get('lam_size','') }}"/></div>
+            <div class="col-md-6"><label class="form-label">Quantity</label>
+              <input type="text" name="lam_quantity" class="form-control" value="{{ d.get('lam_quantity','') }}"/></div>
+            <div class="col-md-6"><label class="form-label">Spot Quantity</label>
+              <input type="text" name="lam_spot_quantity" class="form-control" value="{{ d.get('lam_spot_quantity','') }}"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PUNCHING -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-dot-circle me-2"></i>Punching</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-4"><label class="form-label">Provider</label>
+              <input type="text" name="punch_provider" class="form-control" value="{{ d.get('punch_provider','') }}"/></div>
+            <div class="col-md-4"><label class="form-label">Size</label>
+              <input type="text" name="punch_size" class="form-control" value="{{ d.get('punch_size','') }}"/></div>
+            <div class="col-md-4"><label class="form-label">Quantity</label>
+              <input type="text" name="punch_quantity" class="form-control" value="{{ d.get('punch_quantity','') }}"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CREASING -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-grip-lines me-2"></i>Creasing</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-3"><label class="form-label">Provider</label>
+              <input type="text" name="crease_provider" class="form-control" value="{{ d.get('crease_provider','') }}"/></div>
+            <div class="col-md-3"><label class="form-label">Type</label>
+              <input type="text" name="crease_type" class="form-control" value="{{ d.get('crease_type','') }}"/></div>
+            <div class="col-md-3"><label class="form-label">Size</label>
+              <input type="text" name="crease_size" class="form-control" value="{{ d.get('crease_size','') }}"/></div>
+            <div class="col-md-3"><label class="form-label">Quantity</label>
+              <input type="text" name="crease_quantity" class="form-control" value="{{ d.get('crease_quantity','') }}"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOLDING -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-compress-alt me-2"></i>Folding</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-4"><label class="form-label">Provider</label>
+              <input type="text" name="fold_provider" class="form-control" value="{{ d.get('fold_provider','') }}"/></div>
+            <div class="col-md-4"><label class="form-label">Size</label>
+              <input type="text" name="fold_size" class="form-control" value="{{ d.get('fold_size','') }}"/></div>
+            <div class="col-md-4"><label class="form-label">Quantity</label>
+              <input type="text" name="fold_quantity" class="form-control" value="{{ d.get('fold_quantity','') }}"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAPER -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-file me-2"></i>Paper</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-4"><label class="form-label">Provider</label>
+              <input type="text" name="paper_provider" class="form-control" value="{{ d.get('paper_provider','') }}"/></div>
+            <div class="col-md-4"><label class="form-label">Size</label>
+              <input type="text" name="paper_size" class="form-control" value="{{ d.get('paper_size','') }}"/></div>
+            <div class="col-md-4"><label class="form-label">Sheets</label>
+              <input type="text" name="paper_sheets" class="form-control" value="{{ d.get('paper_sheets','') }}"/></div>
+            <div class="col-md-6"><label class="form-label">Type</label>
+              <input type="text" name="paper_type" class="form-control" value="{{ d.get('paper_type','') }}" placeholder="Art Paper / Matte…"/></div>
+            <div class="col-md-6"><label class="form-label">GSM</label>
+              <input type="text" name="paper_gsm" class="form-control" value="{{ d.get('paper_gsm','') }}" placeholder="90 / 130 / 170…"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BINDING -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-book me-2"></i>Binding</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-4"><label class="form-label">Provider</label>
+              <input type="text" name="bind_provider" class="form-control" value="{{ d.get('bind_provider','') }}"/></div>
+            <div class="col-md-4"><label class="form-label">Type</label>
+              <input type="text" name="bind_type" class="form-control" value="{{ d.get('bind_type','') }}"/></div>
+            <div class="col-md-4"><label class="form-label">Size</label>
+              <input type="text" name="bind_size" class="form-control" value="{{ d.get('bind_size','') }}"/></div>
+            <div class="col-md-6"><label class="form-label">Pages</label>
+              <input type="text" name="bind_pages" class="form-control" value="{{ d.get('bind_pages','') }}"/></div>
+            <div class="col-md-6"><label class="form-label">Quantity</label>
+              <input type="text" name="bind_quantity" class="form-control" value="{{ d.get('bind_quantity','') }}"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENVELOPE -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-envelope me-2"></i>Envelope</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-3"><label class="form-label">Provider</label>
+              <input type="text" name="env_provider" class="form-control" value="{{ d.get('env_provider','') }}"/></div>
+            <div class="col-md-3"><label class="form-label">Type</label>
+              <input type="text" name="env_type" class="form-control" value="{{ d.get('env_type','') }}"/></div>
+            <div class="col-md-3"><label class="form-label">Size</label>
+              <input type="text" name="env_size" class="form-control" value="{{ d.get('env_size','') }}"/></div>
+            <div class="col-md-3"><label class="form-label">Quantity</label>
+              <input type="text" name="env_quantity" class="form-control" value="{{ d.get('env_quantity','') }}"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CUTTING & OTHER -->
+      <div class="card section-card">
+        <div class="card-header"><i class="fas fa-cut me-2"></i>Cutting & Other Instructions</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label">Cutting Instructions</label>
+              <textarea name="cutting_instructions" class="form-control" rows="3">{{ d.get('cutting_instructions','') }}</textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Other Instructions</label>
+              <textarea name="other_instructions" class="form-control" rows="3">{{ d.get('other_instructions','') }}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /LEFT COLUMN -->
+
+    <!-- RIGHT COLUMN — Cost Sidebar -->
+    <div class="col-lg-4">
+      <div class="card section-card sticky-top" style="top:80px">
+        <div class="card-header"><i class="fas fa-rupee-sign me-2"></i>Cost Breakdown</div>
+        <div class="card-body">
+          {% for fname, label in [('paper_cost','Paper Cost'),('printing_cost','Printing Cost'),
+                                   ('design_cost','Design Cost'),('binding_cost','Binding Cost'),
+                                   ('other_charges','Other Charges')] %}
+          <div class="mb-3">
+            <label class="form-label">{{ label }}</label>
+            <div class="input-group">
+              <span class="input-group-text">₹</span>
+              <input type="number" step="0.01" min="0" name="{{ fname }}"
+                     class="form-control cost-input" id="{{ fname }}"
+                     value="{{ job[fname] if job and job.get(fname) else '0' }}"
+                     oninput="calcTotal()"/>
+            </div>
+          </div>
+          {% endfor %}
+
+          <hr/>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold fs-6">Grand Total</span>
+            <span id="total_display">₹.00</span>
+          </div>
+          <!-- <div class="d-flex justify-content-between align-items-center">
+          <span class="fw-bold fs-6">Grand Total</span>
+          <span id="total_display">₹{{ '{:,.2f}'.format(job.total_cost if job and job.total_cost else 0) }}</span>
+        </div> -->
+
+          <div class="mt-4 d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="fas fa-save me-1"></i>{{ 'Update Job' if is_edit else 'Create Job' }}
+            </button>
+            <a href="{{ url_for('jobs') }}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+
+          {% if is_edit %}
+          <hr/>
+          <a href="{{ url_for('job_pdf', job_pk=job.id) }}" class="btn btn-outline-danger w-100">
+            <i class="fas fa-file-pdf me-1"></i>Download PDF
+          </a>
+          <form method="POST" action="{{ url_for('job_duplicate', job_pk=job.id) }}" class="mt-2">
+            <button class="btn btn-outline-secondary w-100">
+              <i class="fas fa-copy me-1"></i>Duplicate Job
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /row -->
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function calcTotal() {
+  const fields = ['paper_cost','printing_cost','design_cost','binding_cost','other_charges'];
+  let total = 0;
+  fields.forEach(id => {
+    const v = parseFloat(document.getElementById(id).value) || 0;
+    total += v;
+  });
+  document.getElementById('total_display').textContent = '₹' + total.toFixed(2);
+}
+calcTotal();
+</script>
+{% endblock %}

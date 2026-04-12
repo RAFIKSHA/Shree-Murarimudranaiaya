@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Shree Murari mudranaiaya{% endblock %} — Shree Murari mudranaiaya Manager</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    :root {
+      --sidebar-w: 240px;
+      --primary: #2c3e50;
+      --accent: #3498db;
+      --success: #27ae60;
+      --warning: #f39c12;
+      --danger: #e74c3c;
+    }
+    body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
+
+    /* Sidebar */
+    #sidebar {
+      position:fixed; top:0; left:0; height:100vh; width:var(--sidebar-w);
+      background:var(--primary); color:#fff; z-index:1000;
+      display:flex; flex-direction:column; transition:.3s;
+    }
+    #sidebar .brand {
+      padding:20px 16px 12px; font-size:1.2rem; font-weight:700;
+      border-bottom:1px solid rgba(255,255,255,.15); letter-spacing:.5px;
+    }
+    #sidebar .brand span { color:#3498db; }
+    #sidebar nav a {
+      display:flex; align-items:center; gap:10px;
+      padding:11px 20px; color:rgba(255,255,255,.8);
+      text-decoration:none; font-size:.9rem; transition:.2s;
+    }
+    #sidebar nav a:hover, #sidebar nav a.active {
+      background:rgba(255,255,255,.12); color:#fff;
+      border-left:3px solid var(--accent);
+    }
+    #sidebar nav a i { width:18px; text-align:center; }
+    #sidebar .sidebar-footer {
+      margin-top:auto; padding:14px 20px;
+      border-top:1px solid rgba(255,255,255,.1);
+      font-size:.8rem; color:rgba(255,255,255,.5);
+    }
+
+    /* Main */
+    #main { margin-left:var(--sidebar-w); min-height:100vh; }
+    .topbar {
+      background:#fff; padding:12px 24px;
+      border-bottom:1px solid #e0e0e0;
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:999;
+    }
+    .topbar .page-title { font-size:1.15rem; font-weight:600; color:var(--primary); }
+    .content { padding:24px; }
+
+    /* Badges */
+    .badge-pending    { background:#fff3cd; color:#856404; border:1px solid #ffc107; }
+    .badge-inprogress { background:#cfe2ff; color:#084298; border:1px solid #3498db; }
+    .badge-completed  { background:#d1e7dd; color:#0f5132; border:1px solid #27ae60; }
+    .badge-delivered  { background:#e2d9f3; color:#432874; border:1px solid #9b59b6; }
+    .badge-status { padding:4px 10px; border-radius:20px; font-size:.75rem; font-weight:600; }
+
+    /* Cards */
+    .stat-card { border:none; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+    .stat-card .card-body { padding:20px; }
+    .stat-card .stat-icon {
+      width:48px; height:48px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.3rem; color:#fff;
+    }
+    .stat-card .stat-val { font-size:1.8rem; font-weight:700; line-height:1; }
+    .stat-card .stat-lbl { font-size:.8rem; color:#888; margin-top:2px; }
+
+    /* Tables */
+    .table thead th { background:var(--primary); color:#fff; font-weight:500; font-size:.85rem; border:none; }
+    .table tbody tr:hover { background:#f8f9fa; }
+    .table td, .table th { vertical-align:middle; font-size:.88rem; }
+
+    /* Mobile */
+    #sidebar-toggle { display:none; }
+    @media(max-width:768px){
+      #sidebar { left:calc(-1 * var(--sidebar-w)); }
+      #sidebar.open { left:0; }
+      #main { margin-left:0; }
+      #sidebar-toggle { display:block; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <div class="brand">🖨️Shree Murari<span>mudranaiaya</span></div>
+  <nav class="mt-2">
+    <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint=='dashboard' %}active{% endif %}">
+      <i class="fas fa-tachometer-alt"></i> Dashboard
+    </a>
+    <a href="{{ url_for('customers') }}" class="{% if 'customer' in request.endpoint %}active{% endif %}">
+      <i class="fas fa-users"></i> Customers
+    </a>
+    <a href="{{ url_for('jobs') }}" class="{% if 'job' in request.endpoint %}active{% endif %}">
+      <i class="fas fa-briefcase"></i> Jobs
+    </a>
+    <a href="{{ url_for('jobs') }}?status=Pending" class="">
+      <i class="fas fa-clock"></i> Pending
+    </a>
+    <a href="{{ url_for('jobs') }}?status=In+Progress" class="">
+      <i class="fas fa-spinner"></i> In Progress
+    </a>
+    <a href="{{ url_for('jobs') }}?status=Completed" class="">
+      <i class="fas fa-check-circle"></i> Completed
+    </a>
+    <a href="{{ url_for('jobs') }}?status=Delivered" class="">
+      <i class="fas fa-truck"></i> Delivered
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <i class="fas fa-user-circle me-1"></i> {{ session.get('admin_user','Admin') }}
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <div class="topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button id="sidebar-toggle" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        <i class="fas fa-bars"></i>
+      </button>
+      <span class="page-title">{% block page_title %}{% endblock %}</span>
+    </div>
+    <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger">
+      <i class="fas fa-sign-out-alt me-1"></i>Logout
+    </a>
+  </div>
+
+  <div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }} alert-dismissible fade show py-2" role="alert">
+          {{ msg }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

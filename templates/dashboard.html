@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Stat Cards Row 1 — Job Counts -->
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3">
+    <div class="card stat-card h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#2c3e50"><i class="fas fa-briefcase"></i></div>
+        <div>
+          <div class="stat-val">{{ total }}</div>
+          <div class="stat-lbl">Total Jobs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#f39c12"><i class="fas fa-clock"></i></div>
+        <div>
+          <div class="stat-val">{{ pending }}</div>
+          <div class="stat-lbl">Pending</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#3498db"><i class="fas fa-spinner"></i></div>
+        <div>
+          <div class="stat-val">{{ in_progress }}</div>
+          <div class="stat-lbl">In Progress</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#27ae60"><i class="fas fa-check-circle"></i></div>
+        <div>
+          <div class="stat-val">{{ completed }}</div>
+          <div class="stat-lbl">Completed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stat Cards Row 2 — Revenue -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4">
+    <div class="card stat-card h-100" style="border-left:4px solid #f39c12">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#f39c12"><i class="fas fa-rupee-sign"></i></div>
+        <div>
+          <div class="stat-val text-warning">₹{{ "{:,.2f}".format(daily_revenue) }}</div>
+          <div class="stat-lbl">Today's Revenue</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="card stat-card h-100" style="border-left:4px solid #3498db">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#3498db"><i class="fas fa-calendar-alt"></i></div>
+        <div>
+          <div class="stat-val text-primary">₹{{ "{:,.2f}".format(monthly_revenue) }}</div>
+          <div class="stat-lbl">This Month</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card stat-card h-100" style="border-left:4px solid #27ae60">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#27ae60"><i class="fas fa-chart-line"></i></div>
+        <div>
+          <div class="stat-val text-success">₹{{ "{:,.2f}".format(total_revenue) }}</div>
+          <div class="stat-lbl">Total Revenue</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="d-flex gap-2 mb-4">
+  <a href="{{ url_for('job_new') }}" class="btn btn-primary">
+    <i class="fas fa-plus me-1"></i> New Job
+  </a>
+  <a href="{{ url_for('customer_new') }}" class="btn btn-outline-secondary">
+    <i class="fas fa-user-plus me-1"></i> New Customer
+  </a>
+</div>
+
+<!-- Recent Jobs -->
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+    <h6 class="mb-0 fw-bold"><i class="fas fa-history me-2 text-primary"></i>Recent Jobs</h6>
+    <a href="{{ url_for('jobs') }}" class="btn btn-sm btn-outline-primary">View All</a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Job ID</th>
+            <th>Customer</th>
+            <th>Job Name</th>
+            <th>Status</th>
+            <th>Total Cost</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in recent_jobs %}
+          <tr>
+            <td><strong>{{ job.job_id }}</strong></td>
+            <td>{{ job.customers.name if job.customers else '—' }}</td>
+            <td>{{ job.job_name or '—' }}</td>
+            <td>
+              <span class="badge-status {{ status_badge_class(job.status) }}">{{ job.status }}</span>
+            </td>
+            <td class="fw-semibold text-success">₹{{ "{:,.2f}".format(job.total_cost or 0) }}</td>
+            <td class="text-muted small">{{ job.receiving_date or '—' }}</td>
+            <td>
+              <a href="{{ url_for('job_sheet', job_pk=job.id) }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-4">No jobs yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

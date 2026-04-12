@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Jobs{% endblock %}
+{% block page_title %}Jobs{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <!-- Status Tabs -->
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('jobs') }}"
+       class="btn btn-sm {{ 'btn-dark' if not status_filter else 'btn-outline-secondary' }}">All</a>
+    {% for s, cls in [('Pending','warning'),('In Progress','primary'),('Completed','success'),('Delivered','info')] %}
+    <a href="{{ url_for('jobs') }}?status={{ s }}"
+       class="btn btn-sm {{ 'btn-' + cls if status_filter == s else 'btn-outline-' + cls }}">{{ s }}</a>
+    {% endfor %}
+  </div>
+  <a href="{{ url_for('job_new') }}" class="btn btn-success">
+    <i class="fas fa-plus me-1"></i>New Job
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Job ID</th><th>Customer</th><th>Job Name</th>
+            <th>Copies</th><th>Status</th><th>Total</th>
+            <th>Receive</th><th>Delivery</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in jobs %}
+          <tr>
+            <td><strong>{{ job.job_id }}</strong></td>
+            <td>{{ job.customers.name if job.customers else '—' }}</td>
+            <td>{{ job.job_name or '—' }}</td>
+            <td class="text-center">{{ job.copies }}</td>
+            <td>
+              <span class="badge-status {{ status_badge_class(job.status) }}">{{ job.status }}</span>
+            </td>
+            <td class="fw-semibold text-success">₹{{ "{:,.2f}".format(job.total_cost or 0) }}</td>
+            <td class="text-muted small">{{ job.receiving_date or '—' }}</td>
+            <td class="text-muted small">{{ job.delivery_date or '—' }}</td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="{{ url_for('job_sheet', job_pk=job.id) }}" class="btn btn-sm btn-outline-primary" title="View Sheet">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('job_edit', job_pk=job.id) }}" class="btn btn-sm btn-outline-warning" title="Edit">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{{ url_for('job_pdf', job_pk=job.id) }}" class="btn btn-sm btn-outline-danger" title="Download PDF">
+                  <i class="fas fa-file-pdf"></i>
+                </a>
+                <form method="POST" action="{{ url_for('job_duplicate', job_pk=job.id) }}">
+                  <button class="btn btn-sm btn-outline-secondary" title="Duplicate"><i class="fas fa-copy"></i></button>
+                </form>
+                <form method="POST" action="{{ url_for('job_delete', job_pk=job.id) }}"
+                      onsubmit="return confirm('Delete job {{ job.job_id }}?')">
+                  <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="9" class="text-center text-muted py-4">No jobs found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

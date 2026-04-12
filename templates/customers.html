@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Customers{% endblock %}
+{% block page_title %}Customers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <form class="d-flex gap-2" method="GET">
+    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search by name…" style="max-width:280px"/>
+    <button class="btn btn-primary"><i class="fas fa-search"></i></button>
+    {% if query %}<a href="{{ url_for('customers') }}" class="btn btn-outline-secondary">Clear</a>{% endif %}
+  </form>
+  <a href="{{ url_for('customer_new') }}" class="btn btn-success">
+    <i class="fas fa-plus me-1"></i> Add Customer
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr><th>#</th><th>Name</th><th>Mobile</th><th>Address</th><th>Joined</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for c in customers %}
+          <tr>
+            <td class="text-muted small">{{ loop.index }}</td>
+            <td><strong>{{ c.name }}</strong></td>
+            <td>{{ c.mobile }}</td>
+            <td class="text-muted small">{{ c.address or '—' }}</td>
+            <td class="text-muted small">{{ c.created_at[:10] if c.created_at else '—' }}</td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="{{ url_for('customer_history', cid=c.id) }}" class="btn btn-sm btn-outline-info" title="Job History">
+                  <i class="fas fa-history"></i>
+                </a>
+                <a href="{{ url_for('customer_edit', cid=c.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <form method="POST" action="{{ url_for('customer_delete', cid=c.id) }}"
+                      onsubmit="return confirm('Delete {{ c.name }}?')">
+                  <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-4">No customers found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
